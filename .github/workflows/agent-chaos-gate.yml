@@ -43,7 +43,18 @@ jobs:
       - name: Boot LocalStack Pro & Siege Engine
         run: |
           cd .sandbox-siege-harness
-          docker compose up -d --wait localstack siege-backend
+          if [ -z "${LOCALSTACK_AUTH_TOKEN}" ]; then
+            echo "::error::LOCALSTACK_AUTH_TOKEN secret is empty or not passed to job environment!"
+            exit 1
+          fi
+          echo "Starting stack with LOCALSTACK_AUTH_TOKEN (length: ${#LOCALSTACK_AUTH_TOKEN})..."
+          export LOCALSTACK_AUTH_TOKEN="${LOCALSTACK_AUTH_TOKEN}"
+          docker compose up -d --wait localstack siege-backend || {
+            echo "::error::Docker compose failed to start. Printing container logs:"
+            docker compose logs localstack
+            docker compose logs siege-backend
+            exit 1
+          }
           echo "Sandbox Siege Engine and LocalStack Pro are healthy."
 
       # ── 4. Verify Engine Health (siege doctor) ──────────────────────────────
