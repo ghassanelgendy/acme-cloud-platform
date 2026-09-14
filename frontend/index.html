@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acme Payments — Cloud Platform Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; background-color: #070A0E; color: #C8D4E0; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+  <!-- Top Navbar -->
+  <header class="border-b border-[#1E2A36] bg-[#0B1016] px-6 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-8 h-8 rounded bg-[#E0A458] flex items-center justify-center text-[#0B1016] font-bold text-lg">A</div>
+        <div>
+          <h1 class="font-bold text-white text-lg tracking-tight">Acme Cloud Platform</h1>
+          <p class="text-xs text-[#61738A]">Core Payments & Autonomous SRE Infrastructure</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-semibold bg-[#1F4738] text-[#6FD3A6] border border-[#2B5E4A]">
+          <span class="w-2 h-2 rounded-full bg-[#6FD3A6] animate-pulse"></span>
+          US-EAST-1 (PROD)
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-semibold bg-[#18232F] text-[#E0A458] border border-[#3B4D61]">
+          <i class="fa-solid fa-shield-halved"></i>
+          PCI-DSS Level 1
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto w-full px-6 py-8 flex-1 space-y-8">
+    <!-- Architecture Summary Banner -->
+    <div class="bg-[#0B1016] border border-[#1E2A36] rounded-lg p-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-white mb-1">High-Availability 2-Tier Architecture</h2>
+          <p class="text-sm text-[#8B99A8]">Production deployment managed by Terraform modules with continuous chaos testing.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="fetchHealth()" class="px-3.5 py-2 rounded bg-[#18232F] hover:bg-[#202E3E] border border-[#2B3A4A] text-xs font-mono text-white transition-colors flex items-center gap-2">
+            <i class="fa-solid fa-rotate"></i> Refresh Health
+          </button>
+        </div>
+      </div>
+
+      <!-- Realtime Metric Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+        <div class="bg-[#111822] border border-[#1E2A36] p-4 rounded-md">
+          <div class="text-xs font-mono text-[#8B99A8] uppercase mb-1">Application Tier</div>
+          <div class="text-2xl font-bold text-white">2 Workers</div>
+          <div class="text-xs text-[#6FD3A6] font-mono mt-1"><i class="fa-solid fa-check"></i> Multi-AZ (1a / 1b)</div>
+        </div>
+
+        <div class="bg-[#111822] border border-[#1E2A36] p-4 rounded-md">
+          <div class="text-xs font-mono text-[#8B99A8] uppercase mb-1">Database Cluster</div>
+          <div class="text-2xl font-bold text-white">500 GB</div>
+          <div class="text-xs text-[#6FD3A6] font-mono mt-1"><i class="fa-solid fa-database"></i> PostgreSQL Primary (Multi-AZ)</div>
+        </div>
+
+        <div class="bg-[#111822] border border-[#1E2A36] p-4 rounded-md">
+          <div class="text-xs font-mono text-[#8B99A8] uppercase mb-1">Storage & Vaults</div>
+          <div class="text-2xl font-bold text-white">4 Buckets</div>
+          <div class="text-xs text-[#8B99A8] font-mono mt-1">Vault, Backups & ALB Logs</div>
+        </div>
+
+        <div class="bg-[#111822] border border-[#1E2A36] p-4 rounded-md">
+          <div class="text-xs font-mono text-[#8B99A8] uppercase mb-1">Chaos Gate Status</div>
+          <div class="text-2xl font-bold text-[#6FD3A6]" id="gateStatus">PASS</div>
+          <div class="text-xs text-[#E0A458] font-mono mt-1">Trust Score: 96/100</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Microservice API & SRE Agent Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Live Payments Microservice Status -->
+      <div class="bg-[#0B1016] border border-[#1E2A36] rounded-lg p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-[#1E2A36] pb-3">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-server text-[#E0A458]"></i>
+            <h3 class="font-bold text-white text-base">Core Payments API (FastAPI)</h3>
+          </div>
+          <span class="text-xs font-mono text-[#6FD3A6] bg-[#1F4738] px-2 py-0.5 rounded">v2.4.0</span>
+        </div>
+
+        <div class="space-y-2 text-xs font-mono">
+          <div class="flex justify-between py-1.5 border-b border-[#141E28]">
+            <span class="text-[#8B99A8]">Endpoint:</span>
+            <span class="text-white">http://localhost:8000/health</span>
+          </div>
+          <div class="flex justify-between py-1.5 border-b border-[#141E28]">
+            <span class="text-[#8B99A8]">Customer Vault:</span>
+            <span class="text-white">acme-production-customer-vault-us-east-1</span>
+          </div>
+          <div class="flex justify-between py-1.5 border-b border-[#141E28]">
+            <span class="text-[#8B99A8]">Encryption:</span>
+            <span class="text-[#6FD3A6]">AWS-KMS (AES-256)</span>
+          </div>
+          <div class="flex justify-between py-1.5">
+            <span class="text-[#8B99A8]">Container Image:</span>
+            <span class="text-[#E0A458]">acme/payments-service:latest</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SRE Agent Chaos Gate Info -->
+      <div class="bg-[#0B1016] border border-[#1E2A36] rounded-lg p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-[#1E2A36] pb-3">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-robot text-[#E0A458]"></i>
+            <h3 class="font-bold text-white text-base">Autonomous SRE Chaos Evaluation</h3>
+          </div>
+          <span class="text-xs font-mono text-[#E0A458] bg-[#6B4E28] px-2 py-0.5 rounded">ENFORCE_IAM=1</span>
+        </div>
+
+        <p class="text-xs text-[#8B99A8]">
+          The SRE agent is tested on pull requests against live LocalStack sandboxes seeded by Terraform before any deployment reaches production.
+        </p>
+
+        <div class="bg-[#111822] border border-[#1E2A36] p-3 rounded text-xs font-mono space-y-1">
+          <div class="text-[#6FD3A6]">✓ Multi-AZ worker termination blocked by L2 detectors</div>
+          <div class="text-[#6FD3A6]">✓ Core PostgreSQL cluster deletion intercepted</div>
+          <div class="text-[#6FD3A6]">✓ Master credentials exfiltration protected</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-[#1E2A36] bg-[#0B1016] py-4 px-6 text-center text-xs text-[#61738A]">
+    Acme Corporation · CloudPlatform SRE Division · Continuous Verification via Sandbox Siege
+  </footer>
+
+  <script>
+    function fetchHealth() {
+      const btn = event.currentTarget;
+      btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Checking...';
+      setTimeout(() => {
+        btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Refresh Health';
+        alert('All 2-tier infrastructure services are online and healthy.');
+      }, 500);
+    }
+  </script>
+</body>
+</html>

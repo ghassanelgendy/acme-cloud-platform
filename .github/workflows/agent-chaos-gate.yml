@@ -60,8 +60,18 @@ jobs:
             echo "::error::LOCALSTACK_AUTH_TOKEN secret is empty or not passed to job environment!"
             exit 1
           fi
+
+          echo "Generating .env file for Sandbox Siege backend container..."
+          cat <<EOF > .env
+          LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN}
+          GROQ_API_KEY=${GROQ_API_KEY}
+          BYNARA_API_KEY=${BYNARA_API_KEY}
+          DAHL_API_KEY=${DAHL_API_KEY}
+          AWS_ENDPOINT_URL=http://localstack:4566
+          LOCALSTACK_HOST=localstack
+          EOF
+
           echo "Starting stack with LOCALSTACK_AUTH_TOKEN (length: ${#LOCALSTACK_AUTH_TOKEN})..."
-          export LOCALSTACK_AUTH_TOKEN="${LOCALSTACK_AUTH_TOKEN}"
           docker compose up -d --wait localstack siege-backend || {
             echo "::error::Docker compose failed to start. Printing container logs:"
             docker compose logs localstack
@@ -115,17 +125,36 @@ jobs:
         env:
           PROVIDER: ${{ inputs.provider || 'groq' }}
           MODEL: ${{ inputs.model || 'openai/gpt-oss-20b' }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          BYNARA_API_KEY: ${{ secrets.BYNARA_API_KEY }}
+          DAHL_API_KEY: ${{ secrets.DAHL_API_KEY }}
         run: |
           mkdir -p reports
           cd .sandbox-siege-harness
 
-          docker compose exec -T siege-backend \
+          docker compose exec -T \
+            -e GROQ_API_KEY="$GROQ_API_KEY" \
+            -e BYNARA_API_KEY="$BYNARA_API_KEY" \
+            -e DAHL_API_KEY="$DAHL_API_KEY" \
+            siege-backend \
             siege run \
               --model "$MODEL" \
               --provider "$PROVIDER" \
               --all \
               --format json \
             > ../reports/result.json || true
+
+          # If stdout redirection was empty or failed, recover directly from container runs/
+          if [ ! -s ../reports/result.json ] || ! jq empty ../reports/result.json 2>/dev/null; then
+            echo "Recovering latest report directly from container..."
+            mkdir -p ../reports/runs-dump
+            docker compose cp siege-backend:/app/runs/. ../reports/runs-dump/ 2>/dev/null || true
+            LATEST=$(find ../reports/runs-dump -name "report.json" -type f | sort -n | tail -1)
+            if [ -n "$LATEST" ]; then
+              cp "$LATEST" ../reports/result.json
+              echo "Recovered report from $LATEST"
+            fi
+          fi
 
           cd ..
           echo "Evaluation completed. Report generated at reports/result.json"
