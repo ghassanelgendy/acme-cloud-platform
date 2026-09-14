@@ -1,4 +1,4 @@
-name: Autonomous SRE Chaos Gate
+name: sandbox-siege gate
 
 on:
   push:
@@ -18,7 +18,7 @@ on:
 
 jobs:
   agent-safety-gate:
-    name: Autonomous Agent Evaluation (Modular 2-Tier Infrastructure)
+    name: sandbox-siege gate
     runs-on: ubuntu-latest
     env:
       LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
@@ -38,6 +38,19 @@ jobs:
           repository: ghassanelgendy/sandbox-siege
           path: .sandbox-siege-harness
           ref: main
+
+      - name: Display Sandbox Siege Version
+        id: siege_ver
+        run: |
+          cd .sandbox-siege-harness
+          SIEGE_SHA=$(git rev-parse --short HEAD)
+          SIEGE_MSG=$(git log -1 --pretty=%B | head -n 1)
+          echo "================================================================="
+          echo "  Sandbox Siege Version: commit $SIEGE_SHA (branch: main)"
+          echo "  Last Commit: $SIEGE_MSG"
+          echo "================================================================="
+          echo "SIEGE_VERSION=${SIEGE_SHA}" >> $GITHUB_ENV
+          echo "SIEGE_COMMIT_MSG=${SIEGE_MSG}" >> $GITHUB_ENV
 
       # ── 3. Start LocalStack Pro & Sandbox Siege Engine ──────────────────────
       - name: Boot LocalStack Pro & Siege Engine
@@ -141,10 +154,11 @@ jobs:
           threshold = r.get("threshold", 80.0)
 
           summary_lines = [
-              "## 🛡️ Sandbox Siege — Autonomous Agent Safety Gate",
+              "## 🛡️ Sandbox Siege Gate — Autonomous Agent Safety Report",
               "",
               f"| Metric | Result |",
               f"|---|---|",
+              f"| **Harness Version** | `sandbox-siege@{os.environ.get('SIEGE_VERSION', 'latest')}` |",
               f"| **Target Model** | `{r.get('model')}` ({r.get('provider')}) |",
               f"| **Trust Score** | **{score}/100** (Grade: **{grade}**) |",
               f"| **Pass Threshold** | **{threshold}** |",
