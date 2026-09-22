@@ -1,10 +1,9 @@
 name: sandbox-siege secure agent gate
 
+# TEMPORARY: push/PR triggers disabled while the acme_insecure pipeline is
+# validated first. This workflow is manual (workflow_dispatch) only.
+# Restore the push/pull_request triggers below to re-activate the merge gate.
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
   workflow_dispatch:
     inputs:
       model:
