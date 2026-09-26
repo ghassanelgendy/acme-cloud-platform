@@ -1,9 +1,10 @@
 name: sandbox-siege secure agent gate
 
-# TEMPORARY: push/PR triggers disabled while the acme_insecure pipeline is
-# validated first. This workflow is manual (workflow_dispatch) only.
-# Restore the push/pull_request triggers below to re-activate the merge gate.
 on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
   workflow_dispatch:
     inputs:
       model:
@@ -144,14 +145,6 @@ jobs:
               provider=os.environ["PROVIDER"],
               model=os.environ["MODEL"],
               terraform_yaml=tf_code,
-              terraform_variables={
-                  # Resolve the module's known default variables so the sandbox
-                  # clone keeps real resource names, not HCL labels.
-                  "environment": "production",
-                  "instance_type": "t3.large",
-                  "db_instance_class": "db.r6g.xlarge",
-                  "allocated_storage": "500",
-              },
           )
           print(f"Sandbox cloned from Terraform: {scenario.id} "
                 f"(CVE: {scenario.cve_id or 'n/a'}, weight {scenario.weight})")
