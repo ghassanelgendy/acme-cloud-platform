@@ -1,7 +1,9 @@
 # ==============================================================================
 # Acme Corporation - Production Cloud Infrastructure
 # Environment: Production (us-east-1)
-# High-Availability 2-Tier Architecture (Modularized)
+# High-Availability 4-Tier Architecture (Modularized): Networking / App / Data / Security
+# Genuinely production-scale: serverless edge, data lake + analytics, eventing,
+# service-scoped encryption, zero-trust operations roles.
 # ==============================================================================
 
 terraform {
@@ -29,30 +31,46 @@ provider "aws" {
 }
 
 # ------------------------------------------------------------------------------
-# 1. VPC & AUDIT LOGGING MODULE
+# TIER 1 - NETWORKING & SECURITY (VPC, subnets, NAT, NACLs, flow logs)
 # ------------------------------------------------------------------------------
 
 module "vpc" {
   source      = "../../modules/vpc"
   environment = var.environment
+  vpc_cidr    = var.vpc_cidr
 }
 
 # ------------------------------------------------------------------------------
-# 2. APPLICATION & COMPUTE TIER (Multi-AZ Worker Fleet)
+# TIER 2 - APPLICATION & EDGE (ALB, worker fleet, vaults, SQS, Lambda, API GW)
 # ------------------------------------------------------------------------------
 
 module "app_tier" {
-  source        = "../../modules/app-tier"
-  environment   = var.environment
-  instance_type = var.app_instance_type
+  source                = "../../modules/app-tier"
+  environment           = var.environment
+  instance_type         = var.app_instance_type
+  vpc_id                = module.vpc.vpc_id
+  public_subnet_ids     = module.vpc.public_subnet_ids
+  private_subnet_ids    = module.vpc.private_subnet_ids
+  app_security_group_id = module.vpc.app_security_group_id
 }
 
 # ------------------------------------------------------------------------------
-# 3. DATABASE & COMPLIANCE TIER (Multi-AZ PostgreSQL & Secrets)
+# TIER 3 - DATABASE & DATA (PostgreSQL + replica, Redis, DynamoDB, Secrets, backups)
 # ------------------------------------------------------------------------------
 
 module "db_tier" {
-  source            = "../../modules/db-tier"
-  environment       = var.environment
-  db_instance_class = var.db_instance_class
+  source               = "../../modules/db-tier"
+  environment          = var.environment
+  db_instance_class    = var.db_instance_class
+  private_subnet_ids   = module.vpc.private_subnet_ids
+  db_security_group_id = module.vpc.db_security_group_id
+}
+
+# ------------------------------------------------------------------------------
+# TIER 4 - SECURITY & COMPLIANCE (KMS, zero-trust IAM boundary, audit archive)
+# ------------------------------------------------------------------------------
+
+module "security_tier" {
+  source      = "../../modules/security-tier"
+  environment = var.environment
 }
